@@ -21,6 +21,6 @@ Katana
 #Damage stat
 0
 #Skill
-0
+4
 #Base damage
 5

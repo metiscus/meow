@@ -17,11 +17,11 @@ static void char_init_all()
     if(!G_Skills)
     {
         G_Skills = (struct skill_t*)calloc(SK_Count, sizeof(struct skill_t));
-        skill_set(&G_Skills[SK_Attack],        "Attack", 1000, 2);
-        skill_set(&G_Skills[SK_Defense],       "Defense", 4000, 2);
-        skill_set(&G_Skills[SK_Dodge],         "Dodge", 10000, 40);
+        skill_set(&G_Skills[SK_Attack],        "Attack", 1000, 2000);
+        skill_set(&G_Skills[SK_Defense],       "Defense", 4000, 4000);
+        skill_set(&G_Skills[SK_Dodge],         "Dodge", 15000, 50);
         skill_set(&G_Skills[SK_Concentration], "Concentration", 2000, 2);
-        skill_set(&G_Skills[SK_Blade],         "Blade", 200, 1);
+        skill_set(&G_Skills[SK_Blade],         "Blade", 2000, 2);
         skill_set(&G_Skills[SK_Healing],       "Healing", 400, 2);
     }
 
@@ -85,7 +85,7 @@ void char_explain(const struct character_t *pChar)
     printf("Stats:\n");
     for(i=0; i<ST_Count; ++i)
     {
-        printf("\t%-10s : %d\n", pChar->stats.name[i], pChar->stats.value[i]);
+        printf("\t%-10s : %d (%d)\n", pChar->stats.name[i], pChar->stats.value[i], pChar->stats.bonus[i]);
     }
     printf("Skills:\n");
     for(i=0; i<SK_Count; ++i)
@@ -96,18 +96,12 @@ void char_explain(const struct character_t *pChar)
 
 void char_add_inventory(struct character_t *pChar, struct object_t *object)
 {
-    printf("[debug] %p\n", pChar->inventory);
     void *ptr = realloc(pChar->inventory, sizeof(void*)*(pChar->inventory_count+1));
     if(ptr != NULL)
     {
         pChar->inventory = ptr;
         pChar->inventory[pChar->inventory_count] = object;
         ++pChar->inventory_count;
-        printf("[debug] inventory item added\n");
-    }
-    else
-    {
-        printf("[debug] inventory item failed to be added\n");
     }
 }
 
@@ -120,7 +114,6 @@ void char_remove_inventory(struct character_t *pChar, struct object_t *object)
         {
             object_destroy(object);
             --pChar->inventory_count;
-            printf("[debug] inventory item removed\n");
             
             if(pChar->inventory_count > 0 && i < pChar->inventory_count)
             {
@@ -136,8 +129,6 @@ void char_remove_inventory(struct character_t *pChar, struct object_t *object)
             return;
         }
     }
-
-    printf("[debug] inventory item failed to be removed\n");
 }
 
 void char_heal(struct character_t *pChar, unsigned qty)
@@ -165,7 +156,12 @@ void char_consumable_apply(struct character_t *pChar, struct object_t *pObj)
                 case 0: // healing potion
                 {
                     printf("%s quaffs a %s and is \x1B[38;5;4mhealed\x1B[0m.\n", pChar->name, pObj->name);
-                    char_heal(pChar, 5 * roll());
+                    unsigned healQty =  5 * roll();
+                    if(healQty > 15)
+                    {
+                        healQty = 15;
+                    }
+                    char_heal(pChar,healQty);
                     --pObj->consumable.charge_qty;
                     
                     if(pObj->consumable.charge_qty == 0)
@@ -173,6 +169,21 @@ void char_consumable_apply(struct character_t *pChar, struct object_t *pObj)
                         char_remove_inventory(pChar, pObj);
                     }
                     break;
+                }
+                
+                case 1: // potion of dexterity
+                {
+                    printf("%s quaffs a %s and is \x1B[38;5;4mgrows more wise\x1B[0m.\n", pChar->name, pObj->name);
+                    pChar->stats.bonus[ST_Dex] = 1;
+                    pChar->stats.value[ST_Dex] += pChar->stats.bonus[ST_Dex];
+                    --pObj->consumable.charge_qty;
+                    
+                    if(pObj->consumable.charge_qty == 0)
+                    {
+                        char_remove_inventory(pChar, pObj);
+                    }
+                    break;
+                    
                 }
             }
         }
@@ -243,11 +254,9 @@ int main(int argc, char** argv)
     char_create(&orc, "Munkres", R_Human);
     orc.skills[SK_Concentration] = 10;
     orc.weapon_id = 2; // bo staff
-    char_add_inventory(&orc, object_create(1));
-    char_add_inventory(&orc, object_create(1));
-    char_add_inventory(&orc, object_create(1));
+    char_add_inventory(&orc, object_create(5));
 
-    char_create(&me, name, R_Human);
+    char_create(&me, name, R_Elf);
     me.weapon_id = 1; // katana
     me.skills[SK_Blade] = 10;
 
@@ -255,7 +264,7 @@ int main(int argc, char** argv)
 
     int j;
     int meWins = 0;
-    int trials = 500;
+    int trials = 1000;
     for(j=0; j<trials; ++j)
     {
         me.vitals.value[0] = me.vitals.max[0];
@@ -263,7 +272,7 @@ int main(int argc, char** argv)
 
         for( ; ; )
         {
-            printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
+            //printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
             combat_round(&me, &orc);
             
             // If the ORC health is near critical have him chug a potion
@@ -290,7 +299,7 @@ int main(int argc, char** argv)
                     }
                 }
             }
-            
+
             if(canAttack)
             {
                 combat_round(&orc, &me);
@@ -303,12 +312,11 @@ int main(int argc, char** argv)
                 if(me.vitals.value[0]>0)
                 {
                     char_add_inventory(&orc, object_create(1));
-                    char_add_inventory(&orc, object_create(1));
                 }
                 break;
             }
         }
-        printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
+        //printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
     }
 
     char_explain(&me);
@@ -373,9 +381,8 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
             break;
     }
 
-    char_exercise_skill(pAttacker, SK_Attack, 1);
-    char_exercise_skill(pAttacker, wpn->weapon.skill, 1);
-    char_exercise_skill(pDefender, SK_Defense, 1);
+    char_exercise_skill(pAttacker, SK_Attack, AttackRoll);
+    char_exercise_skill(pDefender, SK_Defense, DefenseRoll);
 
     DefenseRoll += pDefender->stats.value[DefenseStat];
     unsigned dodgeRoll = (roll() + pDefender->skills[SK_Dodge]) / 10 + 1;
@@ -397,15 +404,16 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
             }
         }
 
-        printf("%s %s %s with his %s!\n", pAttacker->name, get_damage_string(Damage), pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
+        //printf("%s %s %s with his %s!\n", pAttacker->name, get_damage_string(Damage), pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
         pDefender->vitals.value[V_Hp] -= Damage;
+        char_exercise_skill(pAttacker, wpn->weapon.skill, Damage);
 
         char_exercise_stat(pAttacker, wpn->weapon.damage_stat, Damage);
         char_exercise_stat(pDefender, DefenseStat, Damage);
     }
     else
     {
-        printf("%s misses %s with his %s!\n", pAttacker->name, pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
+        //printf("%s misses %s with his %s!\n", pAttacker->name, pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
         char_exercise_skill(pDefender, SK_Dodge, dodgeRoll);
     }
 }

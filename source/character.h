@@ -51,6 +51,7 @@ struct stats_t
 {
     char name[ST_Count][NAME_MAX];
     unsigned value[ST_Count];
+    unsigned bonus[ST_Count];
 };
 
 struct race_t
