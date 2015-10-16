@@ -378,7 +378,7 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
     if(criticalAttack || AttackRoll > DefenseRoll)
     {
         unsigned Damage = wpn->weapon.damage_base;
-        Damage += pAttacker->stats.value[wpn->weapon.damage_stat] / pDefender->skills[SK_Defense];
+        Damage += pAttacker->stats.value[wpn->weapon.damage_stat] / pDefender->skills[SK_Defense] + 1;
         if(criticalAttack)
         {
             if(roll() > DefenseRoll)
