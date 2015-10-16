@@ -1,0 +1,14 @@
+object
+# Subtype
+0
+# Mass
+1
+# Name
+Healing Potion
+# Consumable type
+0
+# Charge count
+1
+# Charge type
+0
+
