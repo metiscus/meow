@@ -17,10 +17,10 @@ static void char_init_all()
     if(!G_Skills)
     {
         G_Skills = (struct skill_t*)calloc(SK_Count, sizeof(struct skill_t));
-        skill_set(&G_Skills[SK_Attack],        "Attack", 100, 1);
-        skill_set(&G_Skills[SK_Defense],       "Defense", 400, 2);
-        skill_set(&G_Skills[SK_Dodge],         "Dodge", 400, 4);
-        skill_set(&G_Skills[SK_Concentration], "Concentration", 200, 1);
+        skill_set(&G_Skills[SK_Attack],        "Attack", 1000, 2);
+        skill_set(&G_Skills[SK_Defense],       "Defense", 4000, 2);
+        skill_set(&G_Skills[SK_Dodge],         "Dodge", 10000, 40);
+        skill_set(&G_Skills[SK_Concentration], "Concentration", 2000, 2);
         skill_set(&G_Skills[SK_Blade],         "Blade", 200, 1);
         skill_set(&G_Skills[SK_Healing],       "Healing", 400, 2);
     }
@@ -165,7 +165,7 @@ void char_consumable_apply(struct character_t *pChar, struct object_t *pObj)
                 case 0: // healing potion
                 {
                     printf("%s quaffs a %s and is \x1B[38;5;4mhealed\x1B[0m.\n", pChar->name, pObj->name);
-                    char_heal(pChar, roll()+roll());
+                    char_heal(pChar, 5 * roll());
                     --pObj->consumable.charge_qty;
                     
                     if(pObj->consumable.charge_qty == 0)
@@ -245,6 +245,7 @@ int main(int argc, char** argv)
     orc.weapon_id = 2; // bo staff
     char_add_inventory(&orc, object_create(1));
     char_add_inventory(&orc, object_create(1));
+    char_add_inventory(&orc, object_create(1));
 
     char_create(&me, name, R_Human);
     me.weapon_id = 1; // katana
@@ -254,7 +255,7 @@ int main(int argc, char** argv)
 
     int j;
     int meWins = 0;
-    int trials = 1;
+    int trials = 500;
     for(j=0; j<trials; ++j)
     {
         me.vitals.value[0] = me.vitals.max[0];
@@ -282,10 +283,8 @@ int main(int argc, char** argv)
                         // Check for charges and then use it!
                         if(pObj->consumable.charge_qty > 0)
                         {
-                            printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
                             char_consumable_apply(&orc, pObj);
                             canAttack = 0;
-                            printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
                             break;
                         }
                     }
@@ -301,6 +300,11 @@ int main(int argc, char** argv)
             {
                 meWins += (me.vitals.value[0]<=0) ? 0 : 1;
                 printf("Battle complete!\n");
+                if(me.vitals.value[0]>0)
+                {
+                    char_add_inventory(&orc, object_create(1));
+                    char_add_inventory(&orc, object_create(1));
+                }
                 break;
             }
         }
@@ -374,6 +378,8 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
     char_exercise_skill(pDefender, SK_Defense, 1);
 
     DefenseRoll += pDefender->stats.value[DefenseStat];
+    unsigned dodgeRoll = (roll() + pDefender->skills[SK_Dodge]) / 10 + 1;
+    DefenseRoll += dodgeRoll;
 
     if(criticalAttack || AttackRoll > DefenseRoll)
     {
@@ -400,5 +406,6 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
     else
     {
         printf("%s misses %s with his %s!\n", pAttacker->name, pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
+        char_exercise_skill(pDefender, SK_Dodge, dodgeRoll);
     }
 }
