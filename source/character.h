@@ -1,6 +1,8 @@
 #ifndef CHARACTER_H_INCLUDED
 #define CHARACTER_H_INCLUDED
 
+#include "object.h"
+
 #define ST_Str 0
 #define ST_Dex 1
 #define ST_Con 2
@@ -26,6 +28,9 @@
 #define SK_Healing 5
 #define SK_Count 6
 
+#ifdef NAME_MAX
+#undef NAME_MAX
+#endif
 #define NAME_MAX 64
 
 struct way_t
@@ -70,10 +75,13 @@ struct character_t
     unsigned skills[SK_Count];
     unsigned skills_exp[SK_Count];
     unsigned weapon_id;
+    unsigned inventory_count;
+    struct object_t **inventory;
 };
 
 extern void char_create(struct character_t* pChar, char *name, unsigned race);
 extern void char_explain(const struct character_t *pChar);
+extern void char_add_inventory(struct character_t *pChar, struct object_t *object);
 
 extern void stats_init(struct stats_t *pStats, unsigned str, unsigned dex, unsigned con, unsigned intel, unsigned wis);
 extern void stats_set(struct stats_t *pStats, unsigned str, unsigned dex, unsigned con, unsigned intel, unsigned wis);

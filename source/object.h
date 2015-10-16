@@ -1,8 +1,6 @@
 #ifndef OBJECT_H_INCLUDED
 #define OBJECT_H_INCLUDED
 
-#include <limits.h>
-
 enum consumable_type
 {
     con_potion,

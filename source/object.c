@@ -6,6 +6,9 @@
 
 #define DATA_PATH "data/"
 
+#ifdef LINE_MAX
+#undef LINE_MAX
+#endif
 #define LINE_MAX 100
 
 static bool consumable_create(FILE *fp, struct object_t*ptr);

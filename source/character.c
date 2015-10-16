@@ -44,6 +44,11 @@ static void char_init_all()
     }
 }
 
+inline unsigned roll()
+{
+    return rand() % 20;
+}
+
 void char_create(struct character_t* pChar, char *name, unsigned race)
 {
     if(G_Skills == NULL || G_Races == NULL)
@@ -86,6 +91,91 @@ void char_explain(const struct character_t *pChar)
     for(i=0; i<SK_Count; ++i)
     {
         printf("\t%-20s : %d\n", G_Skills[i].name, pChar->skills[i]);
+    }
+}
+
+void char_add_inventory(struct character_t *pChar, struct object_t *object)
+{
+    printf("[debug] %p\n", pChar->inventory);
+    void *ptr = realloc(pChar->inventory, sizeof(void*)*(pChar->inventory_count+1));
+    if(ptr != NULL)
+    {
+        pChar->inventory = ptr;
+        pChar->inventory[pChar->inventory_count] = object;
+        ++pChar->inventory_count;
+        printf("[debug] inventory item added\n");
+    }
+    else
+    {
+        printf("[debug] inventory item failed to be added\n");
+    }
+}
+
+void char_remove_inventory(struct character_t *pChar, struct object_t *object)
+{
+    unsigned i;
+    for(i=0; i<pChar->inventory_count; ++i)
+    {
+        if(pChar->inventory[i] == object)
+        {
+            object_destroy(object);
+            --pChar->inventory_count;
+            printf("[debug] inventory item removed\n");
+            
+            if(pChar->inventory_count > 0 && i < pChar->inventory_count)
+            {
+                // swap the last item with the current item and set the last item pointer to null
+                pChar->inventory[i] = pChar->inventory[pChar->inventory_count];
+                pChar->inventory[pChar->inventory_count] = NULL;
+            }
+            else
+            {
+                pChar->inventory[i] = NULL;
+            }
+            
+            return;
+        }
+    }
+
+    printf("[debug] inventory item failed to be removed\n");
+}
+
+void char_heal(struct character_t *pChar, unsigned qty)
+{
+    pChar->vitals.value[0] += qty;
+    if(pChar->vitals.value[0] > pChar->vitals.max[0])
+    {
+        pChar->vitals.value[0] = pChar->vitals.max[0];
+    }
+}
+
+void char_consumable_apply(struct character_t *pChar, struct object_t *pObj)
+{
+    if(pObj->consumable.type == con_potion)
+    {
+        // apply a potion
+        if(pObj->consumable.charge_qty == 0)
+        {
+            printf("%s tries to quaff a %s but it was empty.\n", pChar->name, pObj->name);
+        }
+        else
+        {
+            switch(pObj->consumable.charge_id)
+            {
+                case 0: // healing potion
+                {
+                    printf("%s quaffs a %s and is \x1B[38;5;4mhealed\x1B[0m.\n", pChar->name, pObj->name);
+                    char_heal(pChar, roll()+roll());
+                    --pObj->consumable.charge_qty;
+                    
+                    if(pObj->consumable.charge_qty == 0)
+                    {
+                        char_remove_inventory(pChar, pObj);
+                    }
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -150,9 +240,11 @@ int main(int argc, char** argv)
         sprintf(name, "%s", username);
     }
 
-    char_create(&orc, "Munkres", R_Elf);
+    char_create(&orc, "Munkres", R_Human);
     orc.skills[SK_Concentration] = 10;
     orc.weapon_id = 2; // bo staff
+    char_add_inventory(&orc, object_create(1));
+    char_add_inventory(&orc, object_create(1));
 
     char_create(&me, name, R_Human);
     me.weapon_id = 1; // katana
@@ -162,7 +254,7 @@ int main(int argc, char** argv)
 
     int j;
     int meWins = 0;
-    int trials = 50;
+    int trials = 1;
     for(j=0; j<trials; ++j)
     {
         me.vitals.value[0] = me.vitals.max[0];
@@ -172,7 +264,38 @@ int main(int argc, char** argv)
         {
             printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
             combat_round(&me, &orc);
-            combat_round(&orc, &me);
+            
+            // If the ORC health is near critical have him chug a potion
+            unsigned criticalHealth = orc.vitals.max[0] / 2 + 1;
+            
+            unsigned canAttack = 1;
+            if((orc.vitals.value[0] <= criticalHealth) && (orc.inventory_count > 0))
+            {
+                // look for a potion to use
+                unsigned item = 0;
+                for(item=0; item<orc.inventory_count; ++item)
+                {
+                    struct object_t *pObj = orc.inventory[item];
+                    if(pObj->type == obj_consumable && pObj->consumable.type == con_potion)
+                    {
+                        // we have a potion
+                        // Check for charges and then use it!
+                        if(pObj->consumable.charge_qty > 0)
+                        {
+                            printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
+                            char_consumable_apply(&orc, pObj);
+                            canAttack = 0;
+                            printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if(canAttack)
+            {
+                combat_round(&orc, &me);
+            }
 
             if(me.vitals.value[0]<=0 || orc.vitals.value[0]<=0)
             {
@@ -189,11 +312,6 @@ int main(int argc, char** argv)
 
     printf("Final result: me %d, Orc %d\n", meWins, trials - meWins);
     return 0;
-}
-
-inline unsigned roll()
-{
-    return rand() % 20;
 }
 
 char* get_damage_string(unsigned damage)

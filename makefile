@@ -1,4 +1,4 @@
-CFLAGS=-O0 -gdwarf-4 -Wall -Wextra
+CFLAGS=-O0 -gdwarf-4 -Wall -Wextra -fdiagnostics-color
 	
 #	source/test.c \
 
