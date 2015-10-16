@@ -1,4 +1,4 @@
-#include "item.h"
+#include "object.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,27 +11,8 @@
 static bool consumable_create(FILE *fp, struct object_t*ptr);
 static bool weapon_create(FILE *fp, struct object_t*ptr);
 static bool armor_create(FILE *fp, struct object_t*ptr);
-
-static bool FileGetLine(FILE *fp, char*buffer, unsigned length)
-{
-    char *ret = NULL;
-    
-    while(ret==NULL && !feof(fp))
-    {
-        ret = fgets(buffer, length, fp);
-        unsigned len = strlen(buffer);
-        if(len && buffer[len-1]=='\n')
-        {
-            buffer[len-1] = '\0';
-        }
-    
-        if(len==0 || buffer[0] == '#')
-        {
-            ret = NULL;
-        }
-    }
-    return ret == buffer;
-}
+static bool FileGetLine(FILE *fp, char*buffer, unsigned length);
+static bool FileGetUnsigned(FILE *fp, unsigned *ptr);
 
 struct object_t* object_create(unsigned id)
 {
@@ -58,18 +39,16 @@ struct object_t* object_create(unsigned id)
         ptr->id = id;
 
         // object_type
-        FileGetLine(fp, line, LINE_MAX);
         unsigned type = 0;
-        sscanf(line, "%u", &type);
+        FileGetUnsigned(fp, &type);
         ptr->type = (enum object_type)type;
         
         // mass
-        FileGetLine(fp, line, LINE_MAX);
-        sscanf(line, "%u", &ptr->mass);
+        FileGetUnsigned(fp, &ptr->mass);
         
         // name
         ptr->name = (char*)calloc(1, LINE_MAX);
-        FileGetLine(fp, line, LINE_MAX);
+        FileGetLine(fp, ptr->name, LINE_MAX);
 
         // call type constructor based on type
         switch(ptr->type)
@@ -77,6 +56,7 @@ struct object_t* object_create(unsigned id)
             case obj_consumable:
                 if(!consumable_create(fp, ptr))
                 {
+                    printf("Failed to create consumable\n");
                     goto cleanup;
                 }
                 break;
@@ -84,6 +64,7 @@ struct object_t* object_create(unsigned id)
             case obj_weapon:
                 if(!weapon_create(fp, ptr))
                 {
+                    printf("Failed to create weapon\n");
                     goto cleanup;
                 }
                 break;
@@ -91,6 +72,7 @@ struct object_t* object_create(unsigned id)
             case obj_armor:
                 if(!armor_create(fp, ptr))
                 {
+                    printf("Failed to create armor\n");
                     goto cleanup;
                 }
                 break;
@@ -101,49 +83,94 @@ struct object_t* object_create(unsigned id)
                 break;
         }
     }
+    else
+    {
+        printf("create_object failed for file %s\n", filename); 
+    }
     return ptr;
 
 cleanup:
-    free(ptr->name);
+    if(ptr)
+    {
+        free(ptr->name);
+    }
     free(ptr);
     return NULL;
 }
 
-void object_destroy(struct object_t *obj);
+void object_destroy(struct object_t *obj)
+{
+    free(obj->name);
+    free(obj);
+}
+//////////
+static bool FileGetLine(FILE *fp, char*buffer, unsigned length)
+{
+    char *ret = NULL;
+    
+    while(ret==NULL && !feof(fp))
+    {
+        ret = fgets(buffer, length, fp);
+        unsigned len = strlen(buffer);
+        if(len && buffer[len-1]=='\n')
+        {
+            buffer[len-1] = '\0';
+        }
+    
+        if(len==0 || buffer[0] == '#')
+        {
+            ret = NULL;
+        }
+    }
+    return ret == buffer;
+}
 
+static bool FileGetUnsigned(FILE *fp, unsigned *ptr)
+{
+    char line[LINE_MAX];
+    if(FileGetLine(fp, line, LINE_MAX) && sscanf(line, "%u", ptr) == 1)
+    {
+        return true;
+    }
+    return false;
+}
 
 static bool consumable_create(FILE *fp, struct object_t*ptr)
 {
-    char line[LINE_MAX];
-
     if(!fp || feof(fp) || !ptr)
     {
         return false;
     }
 
-    // consumable type
-    FileGetLine(fp, line, LINE_MAX);
     unsigned type = 0;
-    sscanf(line, "%u", &type);
+    FileGetUnsigned(fp, &type);
     ptr->consumable.type = (enum consumable_type)type;
     
     // consumable qty
-    FileGetLine(fp, line, LINE_MAX);
-    sscanf(line, "%u", &ptr->consumable.charge_qty);
+    FileGetUnsigned(fp, &ptr->consumable.charge_qty);
     
     // consumable id
-    FileGetLine(fp, line, LINE_MAX);
-    sscanf(line, "%u", &ptr->consumable.charge_id);
+    FileGetUnsigned(fp, &ptr->consumable.charge_id);
 
     return true;
 }
 
 static bool weapon_create(FILE *fp, struct object_t*ptr)
 {
-    return false;
+    if(!fp || feof(fp) || !ptr)
+    {
+        printf("weapon_create : invalid args\n");
+        return false;
+    }
+
+    FileGetUnsigned(fp, &ptr->weapon.hit_stat); 
+    FileGetUnsigned(fp, &ptr->weapon.damage_stat); 
+    FileGetUnsigned(fp, &ptr->weapon.skill); 
+    FileGetUnsigned(fp, &ptr->weapon.damage_base); 
+    return true;
 }
 
 static bool armor_create(FILE *fp, struct object_t*ptr)
 {
-    return false;
+    return true;
 }

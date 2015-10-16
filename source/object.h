@@ -1,5 +1,7 @@
-#ifndef ITEM_H_INCLUDED
-#define ITEM_H_INCLUDED
+#ifndef OBJECT_H_INCLUDED
+#define OBJECT_H_INCLUDED
+
+#include <limits.h>
 
 enum consumable_type
 {
@@ -14,16 +16,12 @@ struct consumable_t
     unsigned charge_id;
 };
 
-enum weapon_type
-{
-    wpn_blunt,
-    wpn_blade,
-    wpn_spear,
-};
-
 struct weapon_t 
 {
-    enum weapon_type type;
+    unsigned hit_stat;
+    unsigned damage_stat;
+    unsigned skill;
+    unsigned damage_base;
 };
 
 enum armor_type
@@ -65,4 +63,4 @@ struct object_t
 
 struct object_t* object_create(unsigned id);
 void object_destroy(struct object_t *obj);
-#endif // ITEM_H_INCLUDED
+#endif // OBJECT_H_INCLUDED

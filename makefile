@@ -1,8 +1,10 @@
-CFLAGS=-g -Wall -Wextra
+CFLAGS=-O0 -gdwarf-4 -Wall -Wextra
+	
+#	source/test.c \
 
 SRC=\
-	source/item.c \
-	source/test.c \
+	source/object.c \
+	source/character.c
 
 default:
 	$(CC) $(CFLAGS) -o meow $(SRC)

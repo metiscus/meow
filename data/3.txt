@@ -1,0 +1,26 @@
+object
+1
+1
+Katana
+#Weapon info
+#define ST_Str 0
+#define ST_Dex 1
+#define ST_Con 2
+#define ST_Int 3
+#define ST_Wis 4
+#define ST_Count 5
+#define SK_Attack  0
+#define SK_Defense 1
+#define SK_Dodge 2
+#define SK_Concentration 3
+#define SK_Blade 4
+#define SK_Healing 5
+#define SK_Count 6
+#Hit stat
+1
+#Damage stat
+0
+#Skill
+0
+#Base damage
+5

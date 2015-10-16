@@ -5,10 +5,11 @@
 #include <string.h>
 #include <time.h>
 #include "character.h"
+#include "object.h"
 
-static struct skill_t *G_Skills = NULL;
-static struct race_t *G_Races = NULL;
-static struct weapon_t *G_Weapons = NULL;
+static struct skill_t *G_Skills   = NULL;
+static struct race_t *G_Races     = NULL;
+static struct object_t *G_Weapons[4];
 static char *G_Vitals[] = { "Hp", "Sp", "Mp" };
 
 static void char_init_all()
@@ -32,27 +33,14 @@ static void char_init_all()
         race_set(&G_Races[R_Orc],   "Orc", 15, 10, 15, 5, 5);
     }
 
-    if(!G_Weapons)
+    G_Weapons[0] = object_create(2);
+    G_Weapons[1] = object_create(3);
+    G_Weapons[2] = object_create(4);
+    
+    if(!G_Weapons[0] || !G_Weapons[1] || !G_Weapons[2])
     {
-        // Hand jammed weapons for now
-        G_Weapons =  (struct weapon_t*)calloc(3, sizeof(struct weapon_t));
-        strncpy(G_Weapons[0].name, "Fists", NAME_MAX);
-        G_Weapons[0].hit_stat    = ST_Dex;
-        G_Weapons[0].damage_stat = ST_Str;
-        G_Weapons[0].skill       = SK_Attack;
-        G_Weapons[0].damage_base = 1;
-
-        strncpy(G_Weapons[1].name, "Katana", NAME_MAX);
-        G_Weapons[1].hit_stat    = ST_Dex;
-        G_Weapons[1].damage_stat = ST_Str;
-        G_Weapons[1].skill       = SK_Blade;
-        G_Weapons[1].damage_base = 5;
-
-        strncpy(G_Weapons[2].name, "Bo Staff", NAME_MAX);
-        G_Weapons[2].hit_stat    = ST_Dex;
-        G_Weapons[2].damage_stat = ST_Wis;
-        G_Weapons[2].skill       = SK_Concentration;
-        G_Weapons[2].damage_base = 3;
+        printf("unable to load weapons\n");
+        exit(1);
     }
 }
 
@@ -110,18 +98,19 @@ void compute_vitals(const struct stats_t *pStats, struct vitals_t *pVitals)
 
 void skill_set(struct skill_t *pSkill, const char* name, unsigned cost, unsigned multiplier)
 {
-    strncpy(pSkill->name, name, NAME_MAX);
+    pSkill->name[0] = '\0';
+    strcat(pSkill->name, name);
     pSkill->cost = cost;
     pSkill->multiplier = multiplier;
 }
 
 void stats_init(struct stats_t *pStats, unsigned str, unsigned dex, unsigned con, unsigned intel, unsigned wis)
 {
-    strncpy(pStats->name[ST_Str], "Strength", NAME_MAX);
-    strncpy(pStats->name[ST_Dex], "Dexterity", NAME_MAX);
-    strncpy(pStats->name[ST_Con], "Constitution", NAME_MAX);
-    strncpy(pStats->name[ST_Int], "Intelligence", NAME_MAX);
-    strncpy(pStats->name[ST_Wis], "Wisdom", NAME_MAX);
+    strcpy(pStats->name[ST_Str], "Strength");
+    strcpy(pStats->name[ST_Dex], "Dexterity");
+    strcpy(pStats->name[ST_Con], "Constitution");
+    strcpy(pStats->name[ST_Int], "Intelligence");
+    strcpy(pStats->name[ST_Wis], "Wisdom");
     stats_set(pStats, str, dex, con, intel, wis);
 }
 
@@ -137,7 +126,8 @@ void stats_set(struct stats_t *pStats, unsigned str, unsigned dex, unsigned con,
 void race_set(struct race_t* pRace, const char* name,
     unsigned str, unsigned dex, unsigned con, unsigned intel, unsigned wis)
 {
-    strncpy(pRace->name, name, NAME_MAX);
+    pRace->name[0] = '\0';
+    strcat(pRace->name, name);
     stats_init(&pRace->stats, str, dex, con, intel, wis);
 }
 
@@ -159,8 +149,6 @@ int main(int argc, char** argv)
         }
         sprintf(name, "%s", username);
     }
-
-    //char_create(&orc, "Slyslar", R_Orc);
 
     char_create(&orc, "Munkres", R_Elf);
     orc.skills[SK_Concentration] = 10;
@@ -243,15 +231,15 @@ void char_exercise_stat(struct character_t *pChar, unsigned stat, unsigned qty)
 
 void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
 {
-    struct weapon_t *wpn = &G_Weapons[pAttacker->weapon_id];
+    struct object_t *wpn = G_Weapons[pAttacker->weapon_id];
     unsigned AttackRoll = roll();
     int criticalAttack = AttackRoll == 19;
 
-    AttackRoll += pAttacker->stats.value[wpn->hit_stat];
+    AttackRoll += pAttacker->stats.value[wpn->weapon.hit_stat];
 
     unsigned DefenseRoll = roll();
     unsigned DefenseStat = ST_Dex;
-    switch(wpn->hit_stat)
+    switch(wpn->weapon.hit_stat)
     {
         case ST_Str:
         case ST_Dex:
@@ -264,15 +252,15 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
     }
 
     char_exercise_skill(pAttacker, SK_Attack, 1);
-    char_exercise_skill(pAttacker, wpn->skill, 1);
+    char_exercise_skill(pAttacker, wpn->weapon.skill, 1);
     char_exercise_skill(pDefender, SK_Defense, 1);
 
     DefenseRoll += pDefender->stats.value[DefenseStat];
 
     if(criticalAttack || AttackRoll > DefenseRoll)
     {
-        unsigned Damage = wpn->damage_base;
-        Damage += pAttacker->stats.value[wpn->damage_stat] / pDefender->skills[SK_Defense];
+        unsigned Damage = wpn->weapon.damage_base;
+        Damage += pAttacker->stats.value[wpn->weapon.damage_stat] / pDefender->skills[SK_Defense];
         if(criticalAttack)
         {
             if(roll() > DefenseRoll)
@@ -285,14 +273,14 @@ void combat_round(struct character_t *pAttacker, struct character_t *pDefender)
             }
         }
 
-        printf("%s %s %s with his %s!\n", pAttacker->name, get_damage_string(Damage), pDefender->name, wpn->name);
+        printf("%s %s %s with his %s!\n", pAttacker->name, get_damage_string(Damage), pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
         pDefender->vitals.value[V_Hp] -= Damage;
 
-        char_exercise_stat(pAttacker, wpn->damage_stat, Damage);
+        char_exercise_stat(pAttacker, wpn->weapon.damage_stat, Damage);
         char_exercise_stat(pDefender, DefenseStat, Damage);
     }
     else
     {
-        printf("%s misses %s with his %s!\n", pAttacker->name, pDefender->name, wpn->name);
+        printf("%s misses %s with his %s!\n", pAttacker->name, pDefender->name, G_Weapons[pAttacker->weapon_id]->name);
     }
 }

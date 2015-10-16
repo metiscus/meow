@@ -60,23 +60,6 @@ struct vitals_t
     int max[V_Count];
 };
 
-struct weapon_t
-{
-    unsigned hit_stat;
-    unsigned damage_stat;
-    unsigned skill;
-    unsigned damage_base;
-};
-
-struct item_t
-{
-    unsigned type;
-    char name [NAME_MAX];
-    union {
-        struct weapon_t weapon;
-    };
-};
-
 struct character_t
 {
     char name [NAME_MAX];
