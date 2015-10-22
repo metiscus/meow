@@ -50,7 +50,7 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager()
 {
-
+    ;
 }
 
 bool ResourceManager::LoadResource(ResourceId id)
@@ -70,7 +70,7 @@ bool ResourceManager::LoadResource(ResourceId id)
         else
         {
             //Load the resource file
-            return LoadResourceFile(fileMapItr->second);
+            return LoadResourceFile(id, fileMapItr->second);
         }
     }
 
@@ -90,6 +90,11 @@ std::shared_ptr<Resource> ResourceManager::GetResource(ResourceId id)
         res = itr->second;
     }
     return res;
+}
+
+void ResourceManager::AddResourceLoader(const ResourceLoader& loader)
+{
+    loaders_.insert(std::make_pair(loader.type, loader));
 }
 
 void ResourceManager::UpdateResources()
@@ -115,9 +120,44 @@ void ResourceManager::UpdateResources()
     }
 }
 
-bool ResourceManager::LoadResourceFile(const std::string& filename)
+bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filename)
 {
+    ///\TODO: Add some better error checking / reporting in here
+    std::string file = FileToString(filename);
+    char *fileCStr = strdup(file.c_str());
+    rapidxml::xml_document<> doc;
+    doc.parse<0>(fileCStr);
 
+    bool ret = false;
+    rapidxml::xml_node<> *node = doc.first_node("resource");
+    if(node)
+    {
+        rapidxml::xml_attribute<> *attr = node->first_attribute("type");
+        if(attr)
+        {
+            boost::uuids::string_generator str_generator;
+            ResourceType type = str_generator(attr->value());
+            auto itr = loaders_.find(type);
+            if(itr != loaders_.end())
+            {
+                std::shared_ptr<Resource> resource = itr->second.load_fun(doc);
+                if(!!resource)
+                {
+                    ret = true;
+                    resources_[id] = resource;
+                }
+            }
+        }
+        else
+        {
+            //\TODO: add error reporting
+        }
+    }
+    else
+    {
+        //\TODO: add error reporting
+    }
+    free(fileCStr);
 }
 
 std::string ResourceManager::FileToString(const std::string& filename)
