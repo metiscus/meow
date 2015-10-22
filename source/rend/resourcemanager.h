@@ -43,8 +43,9 @@ private:
 
     void UpdateResources();
     void CacheResourceId(const std::string& filepath);
-    std::string FileToString(const std::string& filename);
+    std::string FileToString(const std::string& filename) const;
     bool LoadResourceFile(ResourceId id, const std::string& filename);
+    bool IsResourceLoaded(ResourceId id) const;
 };
 
 extern "C"
