@@ -145,7 +145,7 @@ bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filenam
                 BOOST_LOG_TRIVIAL(trace)<<"Loading resource "<<boost::lexical_cast<std::string>(referenceId)<<" as dependency";
                 if(!LoadResource(referenceId))
                 {
-                    BOOST_LOG_TRIVIAL(error)<<"Unable to load dependency " << boost::lexical_cast<std::string>(referenceId) << " as dependency for "
+                    BOOST_LOG_TRIVIAL(error)<<"Unable to load " << boost::lexical_cast<std::string>(referenceId) << " as dependency for "
                         << boost::lexical_cast<std::string>(id);
                     free(fileCStr);
                     return false;
