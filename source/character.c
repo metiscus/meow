@@ -36,7 +36,7 @@ static void char_init_all()
     G_Weapons[0] = object_create(2);
     G_Weapons[1] = object_create(3);
     G_Weapons[2] = object_create(4);
-    
+
     if(!G_Weapons[0] || !G_Weapons[1] || !G_Weapons[2])
     {
         printf("unable to load weapons\n");
@@ -99,7 +99,7 @@ void char_add_inventory(struct character_t *pChar, struct object_t *object)
     void *ptr = realloc(pChar->inventory, sizeof(void*)*(pChar->inventory_count+1));
     if(ptr != NULL)
     {
-        pChar->inventory = ptr;
+        pChar->inventory = (struct object_t **)ptr;
         pChar->inventory[pChar->inventory_count] = object;
         ++pChar->inventory_count;
     }
@@ -114,7 +114,7 @@ void char_remove_inventory(struct character_t *pChar, struct object_t *object)
         {
             object_destroy(object);
             --pChar->inventory_count;
-            
+
             if(pChar->inventory_count > 0 && i < pChar->inventory_count)
             {
                 // swap the last item with the current item and set the last item pointer to null
@@ -125,7 +125,7 @@ void char_remove_inventory(struct character_t *pChar, struct object_t *object)
             {
                 pChar->inventory[i] = NULL;
             }
-            
+
             return;
         }
     }
@@ -163,27 +163,27 @@ void char_consumable_apply(struct character_t *pChar, struct object_t *pObj)
                     }
                     char_heal(pChar,healQty);
                     --pObj->consumable.charge_qty;
-                    
+
                     if(pObj->consumable.charge_qty == 0)
                     {
                         char_remove_inventory(pChar, pObj);
                     }
                     break;
                 }
-                
+
                 case 1: // potion of dexterity
                 {
                     printf("%s quaffs a %s and is \x1B[38;5;4mgrows more wise\x1B[0m.\n", pChar->name, pObj->name);
                     pChar->stats.bonus[ST_Dex] = 1;
                     pChar->stats.value[ST_Dex] += pChar->stats.bonus[ST_Dex];
                     --pObj->consumable.charge_qty;
-                    
+
                     if(pObj->consumable.charge_qty == 0)
                     {
                         char_remove_inventory(pChar, pObj);
                     }
                     break;
-                    
+
                 }
             }
         }
@@ -234,6 +234,8 @@ void race_set(struct race_t* pRace, const char* name,
 
 void combat_round(struct character_t *attacker, struct character_t *defender);
 
+extern void test_resourcemgr();
+
 int main(int argc, char** argv)
 {
     struct character_t me, orc;
@@ -274,10 +276,10 @@ int main(int argc, char** argv)
         {
             //printf("Me: %d\tOrc: %d\n", me.vitals.value[0], orc.vitals.value[0]);
             combat_round(&me, &orc);
-            
+
             // If the ORC health is near critical have him chug a potion
             unsigned criticalHealth = orc.vitals.max[0] / 2 + 1;
-            
+
             unsigned canAttack = 1;
             if((orc.vitals.value[0] <= criticalHealth) && (orc.inventory_count > 0))
             {
@@ -323,6 +325,9 @@ int main(int argc, char** argv)
     char_explain(&orc);
 
     printf("Final result: me %d, Orc %d\n", meWins, trials - meWins);
+
+    test_resourcemgr();
+
     return 0;
 }
 

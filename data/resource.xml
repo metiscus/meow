@@ -1,0 +1,5 @@
+<!-- example resource: an image atlas -->
+<resource uuid="8eb401f0-78ed-11e5-8bcf-feff819cdc9f" type="atlas">
+    <reference uuid="948f16fa-78ed-11e5-8bcf-feff819cdc9f"></reference>
+    <region id="0">0 0 0 0</region>
+</resource>
