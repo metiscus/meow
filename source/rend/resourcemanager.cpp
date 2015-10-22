@@ -53,7 +53,7 @@ ResourceManager::~ResourceManager()
 
 }
 
-bool ResourceManager::LoadResource(uuid_t id)
+bool ResourceManager::LoadResource(ResourceId id)
 {
     auto fileMapItr = resourceFiles_.find(id);
     if(fileMapItr == resourceFiles_.end())
@@ -77,7 +77,7 @@ bool ResourceManager::LoadResource(uuid_t id)
     return true;
 }
 
-std::shared_ptr<Resource> ResourceManager::GetResource(uuid_t id)
+std::shared_ptr<Resource> ResourceManager::GetResource(ResourceId id)
 {
     std::shared_ptr<Resource> res;
     auto itr = resources_.find(id);
@@ -153,7 +153,7 @@ void ResourceManager::CacheResourceId(const std::string& filepath)
 
     boost::uuids::string_generator g;
     std::string uuidStr(attr->value(), attr->value_size());
-    uuid_t uuid = g(uuidStr);
+    ResourceId uuid = g(uuidStr);
     resourceFiles_.insert(std::make_pair(uuid, filepath));
 
     BOOST_LOG_TRIVIAL(trace)<<"ResourceManager::CacheResourceId: "<<uuidStr<<":"<<filepath;
@@ -164,7 +164,7 @@ extern "C"
     void test_resourcemgr()
     {
         ResourceManager::CreateInstance();
-        ResourceManager::uuid_t id;
+        ResourceId id;
         try {
             boost::uuids::string_generator str_generator;
             id = str_generator("67913868-abb6-4130-82a9-9c31985d89dd");

@@ -9,23 +9,28 @@
 
 class Resource;
 
+typedef boost::uuids::uuid ResourceId;
+
+struct ResourceLoader
+{
+
+};
+
 class ResourceManager
 {
 public:
-    typedef boost::uuids::uuid uuid_t;
-
     static void CreateInstance();
     static void DestroyInstance();
     static ResourceManager& GetInstance();
 
-    bool LoadResource(uuid_t resource);
-    std::shared_ptr<Resource> GetResource(uuid_t resource);
+    bool LoadResource(ResourceId resource);
+    std::shared_ptr<Resource> GetResource(ResourceId resource);
 
 private:
     std::string resourcePath_;
 
-    std::map<uuid_t, std::string> resourceFiles_;
-    std::map<uuid_t, std::shared_ptr<Resource> > resources_;
+    std::map<ResourceId, std::string> resourceFiles_;
+    std::map<ResourceId, std::shared_ptr<Resource> > resources_;
 
     ResourceManager();
     ~ResourceManager();
