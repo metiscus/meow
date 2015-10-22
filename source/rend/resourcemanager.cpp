@@ -158,6 +158,8 @@ bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filenam
         //\TODO: add error reporting
     }
     free(fileCStr);
+
+    return ret;
 }
 
 std::string ResourceManager::FileToString(const std::string& filename)

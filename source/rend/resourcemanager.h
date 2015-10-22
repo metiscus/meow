@@ -16,7 +16,6 @@ typedef boost::uuids::uuid ResourceType;
 struct ResourceLoader
 {
     ResourceType type;
-
     std::shared_ptr<Resource> (*load_fun)(rapidxml::xml_document<> &doc);
 };
 
