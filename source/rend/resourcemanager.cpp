@@ -130,16 +130,14 @@ bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filenam
     doc.parse<0>(fileCStr);
 
     bool ret = false;
-    boost::uuids::string_generator str_generator;
     rapidxml::xml_node<> *node = doc.first_node("resource");
     BOOST_LOG_TRIVIAL(trace)<<"Loading file "<<filename<<" for resource "<<boost::lexical_cast<std::string>(id);
     if(node)
     {
-        //\TODO: Add dependency loading here
         for(rapidxml::xml_node<> *dependency = node->first_node("reference"); dependency!=nullptr; dependency = dependency->next_sibling("reference"))
         {
             rapidxml::xml_attribute<> *referenceIdNode = dependency->first_attribute("uuid");
-            ResourceId referenceId = str_generator(referenceIdNode->value());
+            ResourceId referenceId = Resource::StringToResourceId(referenceIdNode->value());
             if(!IsResourceLoaded(referenceId))
             {
                 BOOST_LOG_TRIVIAL(trace)<<"Loading resource "<<boost::lexical_cast<std::string>(referenceId)<<" as dependency";
@@ -156,7 +154,7 @@ bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filenam
         rapidxml::xml_attribute<> *attr = node->first_attribute("type");
         if(attr)
         {
-            ResourceType type = str_generator(attr->value());
+            ResourceType type = Resource::StringToResourceType(attr->value());
             auto itr = loaders_.find(type);
             if(itr != loaders_.end())
             {
@@ -223,9 +221,8 @@ void ResourceManager::CacheResourceId(const std::string& filepath)
         return;
     }
 
-    boost::uuids::string_generator g;
     std::string uuidStr(attr->value(), attr->value_size());
-    ResourceId uuid = g(uuidStr);
+    ResourceId uuid = Resource::StringToResourceId(uuidStr.c_str());
     resourceFiles_.insert(std::make_pair(uuid, filepath));
 
     BOOST_LOG_TRIVIAL(trace)<<"ResourceManager::CacheResourceId: "<<uuidStr<<":"<<filepath;
@@ -240,11 +237,9 @@ extern "C"
         ResourceManager::CreateInstance();
         ResourceId id;
         try {
-            boost::uuids::string_generator str_generator;
-            id = str_generator("8eb401f0-78ed-11e5-8bcf-feff819cdc9f");
-            //id = str_generator("67913868-abb6-4130-82a9-9c31985d89dd");
+            id = Resource::StringToResourceId("8eb401f0-78ed-11e5-8bcf-feff819cdc9f");
 
-            nullLoader.type = str_generator("ce2f105b-2538-43ea-9eb0-24b1fc1c97cb");
+            nullLoader.type = Resource::StringToResourceType("ce2f105b-2538-43ea-9eb0-24b1fc1c97cb");
             nullLoader.load_fun = [](rapidxml::xml_document<> &doc) -> std::shared_ptr<Resource>
             {
                 BOOST_LOG_TRIVIAL(trace)<<"Null Resource Loader";

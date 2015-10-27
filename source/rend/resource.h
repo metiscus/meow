@@ -1,8 +1,10 @@
 #ifndef RESOURCE_H_INCLUDED
 #define RESOURCE_H_INCLUDED
 
-#include <boost/uuid/uuid.hpp>
+#include <cassert>
 #include <boost/noncopyable.hpp>
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid.hpp>
 
 typedef boost::uuids::uuid ResourceId;
 typedef boost::uuids::uuid ResourceType;
@@ -25,6 +27,20 @@ public:
     inline const ResourceType GetResourceType() const
     {
         return type_;
+    }
+
+    static ResourceId StringToResourceId(const char* ptr)
+    {
+        assert(ptr);
+        boost::uuids::string_generator generator;
+        return generator(ptr);
+    }
+
+    static ResourceType StringToResourceType(const char* ptr)
+    {
+        assert(ptr);
+        boost::uuids::string_generator generator;
+        return generator(ptr);
     }
 
 private:

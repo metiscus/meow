@@ -1,4 +1,7 @@
 #include "image.h"
+#include <cassert>
+#include <boost/log/trivial.hpp>
+#include <boost/uuid/string_generator.hpp>
 
 const ResourceType Image::TypeId =
 {
@@ -8,6 +11,15 @@ const ResourceType Image::TypeId =
     0x8e, 0xf5,
     0xca, 0x95, 0x79, 0xc0, 0x00, 0xd3
 };
+
+Image::Image(const ResourceId& id)
+    : Resource(id, TypeId)
+    , width_(0U)
+    , height_(0U)
+    , channels_(0U)
+{
+    ;
+}
 
 void Image::SetImageData(const std::vector<uint8_t>& data, const uint32_t& width, const uint32_t& height, const uint32_t& channels)
 {
@@ -35,4 +47,17 @@ uint32_t Image::GetChannels() const
 const std::vector<uint8_t>& Image::GetData() const
 {
     return data_;
+}
+
+std::shared_ptr<Resource> Image::Load(rapidxml::xml_document<> &doc)
+{
+    std::shared_ptr<Resource> ret;
+    rapidxml::xml_node<> *node = doc.first_node("resource");
+    assert(node);
+
+    ResourceId resId = Resource::StringToResourceId(node->first_attribute("uuid")->value());
+    ret.reset(new Image(resId));
+
+    //TODO: Actually perform the loading of the image file here
+    return ret;
 }
