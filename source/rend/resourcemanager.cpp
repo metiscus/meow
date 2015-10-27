@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iterator>
 #include <rapidxml.hpp>
+#include "imageatlas.h"
 
 static ResourceManager* instance = nullptr;
 
@@ -231,6 +232,7 @@ void ResourceManager::CacheResourceId(const std::string& filepath)
 extern "C"
 {
     ResourceLoader nullLoader;
+    ResourceLoader imageAtlasLoader;
 
     void test_resourcemgr()
     {
@@ -239,17 +241,26 @@ extern "C"
         try {
             id = Resource::StringToResourceId("8eb401f0-78ed-11e5-8bcf-feff819cdc9f");
 
+/*
             nullLoader.type = Resource::StringToResourceType("ce2f105b-2538-43ea-9eb0-24b1fc1c97cb");
             nullLoader.load_fun = [](rapidxml::xml_document<> &doc) -> std::shared_ptr<Resource>
             {
                 BOOST_LOG_TRIVIAL(trace)<<"Null Resource Loader";
                 return std::shared_ptr<Resource>();
             };
+*/
+            imageAtlasLoader.type = Resource::StringToResourceType("ce2f105b-2538-43ea-9eb0-24b1fc1c97cb");
+            imageAtlasLoader.load_fun = [](rapidxml::xml_document<> &doc) -> std::shared_ptr<Resource>
+            {
+                BOOST_LOG_TRIVIAL(trace)<<"Image Atlas Resource Loader";
+                return ImageAtlas::Load(doc);
+            };
+
         }
         catch(...)
         {
         }
-        ResourceManager::GetInstance().AddResourceLoader(nullLoader);
+        ResourceManager::GetInstance().AddResourceLoader(imageAtlasLoader);
         ResourceManager::GetInstance().LoadResource(id);
         ResourceManager::DestroyInstance();
     }

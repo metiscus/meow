@@ -50,16 +50,24 @@ std::shared_ptr<Resource> ImageAtlas::Load(rapidxml::xml_document<> &doc)
 
     for(rapidxml::xml_node<> *region = resourceNode->first_node("region"); region!=nullptr; region = region->next_sibling("region"))
     {
-        rapidxml::xml_attribute<> *attribute = resourceNode->first_attribute("id");
+        rapidxml::xml_attribute<> *attribute = region->first_attribute("id");
         uint32_t regionId = 0;
 
         std::stringstream str;
         str<<attribute->value();
         str>>regionId;
 
-        float x,y,z,w;
-        str<<resourceNode->value();
-        str>>x>>y>>z>>w;
+        str.str("");
+        str.clear();
+        float x = 0;
+        float y = 0;
+        float z = 0;
+        float w = 0;
+        str<<region->value();
+        str>>x;
+        str>>y;
+        str>>z;
+        str>>w;
         Region r = std::make_tuple(x, y, z, w);
         pAtlas->regions_.insert(std::make_pair(regionId, r));
     }

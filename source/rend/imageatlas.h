@@ -23,10 +23,9 @@ public:
 
     static const ResourceType TypeId;
 
+    static std::shared_ptr<Resource> Load(rapidxml::xml_document<> &doc);
 private:
     std::map<uint32_t, Region> regions_;
-
-    static std::shared_ptr<Resource> Load(rapidxml::xml_document<> &doc);
 };
 
 

@@ -21,13 +21,12 @@ public:
 
     static const ResourceType TypeId;
 
+    static std::shared_ptr<Resource> Load(rapidxml::xml_document<> &doc);
 private:
     uint32_t width_;
     uint32_t height_;
     uint32_t channels_;
     std::vector<uint8_t> data_;
-
-    static std::shared_ptr<Resource> Load(rapidxml::xml_document<> &doc);
 };
 
 #endif
