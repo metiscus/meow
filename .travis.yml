@@ -13,5 +13,6 @@ addons:
     - gcc-4.8
     - g++-4.8
     - clang
+    - libboost-all-dev
 
 script: make
