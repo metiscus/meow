@@ -5,6 +5,7 @@ LDFLAGS  := -lboost_system -lboost_filesystem -lboost_log
 
 SRC=\
 	source/rend/image.cpp\
+	source/rend/imageatlas.cpp\
 	source/rend/resourcemanager.cpp\
 	source/character.c\
 	source/object.c\

@@ -5,6 +5,8 @@
 #include "resource.h"
 #include <tuple>
 #include <map>
+#include <memory>
+#include <rapidxml.hpp>
 
 //Type UUID: ce2f105b-2538-43ea-9eb0-24b1fc1c97cb
 
@@ -16,7 +18,7 @@ public:
     ImageAtlas(const ResourceId& id);
 
     void AddRegion(const uint32_t& id, const Region& region);
-    const Region& GetRegion(const uint32_t& id) const;
+    const Region GetRegion(const uint32_t& id) const;
     bool ContainsRegion(const uint32_t& id) const;
 
     static const ResourceType TypeId;
