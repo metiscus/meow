@@ -1,4 +1,5 @@
 #include "imageatlas.h"
+#include <sstream>
 
 const ResourceType ImageAtlas::TypeId =
 {
@@ -40,12 +41,27 @@ bool ImageAtlas::ContainsRegion(const uint32_t& id) const
 std::shared_ptr<Resource> ImageAtlas::Load(rapidxml::xml_document<> &doc)
 {
     std::shared_ptr<Resource> ret;
-    rapidxml::xml_node<> *node = doc.first_node("resource");
-    assert(node);
+    rapidxml::xml_node<> *resourceNode = doc.first_node("resource");
+    assert(resourceNode);
 
-    ResourceId resId = Resource::StringToResourceId(node->first_attribute("uuid")->value());
-    ret.reset(new ImageAtlas(resId));
+    ResourceId resId = Resource::StringToResourceId(resourceNode->first_attribute("uuid")->value());
+    ImageAtlas* pAtlas = new ImageAtlas(resId);
+    ret.reset(pAtlas);
 
-    //TODO: Actually perform the loading of the image atlas here
+    for(rapidxml::xml_node<> *region = resourceNode->first_node("region"); region!=nullptr; region = region->next_sibling("region"))
+    {
+        rapidxml::xml_attribute<> *attribute = resourceNode->first_attribute("id");
+        uint32_t regionId = 0;
+
+        std::stringstream str;
+        str<<attribute->value();
+        str>>regionId;
+
+        float x,y,z,w;
+        str<<resourceNode->value();
+        str>>x>>y>>z>>w;
+        Region r = std::make_tuple(x, y, z, w);
+        pAtlas->regions_.insert(std::make_pair(regionId, r));
+    }
     return ret;
 }

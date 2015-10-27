@@ -1,4 +1,4 @@
-CFLAGS   +=-O0 -gdwarf-4 -Wall -Wextra -pthread
+CFLAGS   +=-O0 -gdwarf-4 -Wall -Wextra -fdiagnostics-color -pthread
 CXXFLAGS += $(CFLAGS) -DRAPIDXML_NO_EXCEPTIONS -std=gnu++11 -Irapidxml -DBOOST_ALL_DYN_LINK
 #debian needs libboost-all-dev
 LDFLAGS  := -lboost_system -lboost_filesystem -lboost_log
