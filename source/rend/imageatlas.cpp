@@ -38,6 +38,11 @@ bool ImageAtlas::ContainsRegion(const uint32_t& id) const
     return regions_.count(id) > 0;
 }
 
+ResourceId ImageAtlas::GetImageId() const
+{
+    return image_;
+}
+
 std::shared_ptr<Resource> ImageAtlas::Load(rapidxml::xml_document<> &doc)
 {
     std::shared_ptr<Resource> ret;
@@ -70,6 +75,13 @@ std::shared_ptr<Resource> ImageAtlas::Load(rapidxml::xml_document<> &doc)
         str>>w;
         Region r = std::make_tuple(x, y, z, w);
         pAtlas->regions_.insert(std::make_pair(regionId, r));
+
+        // Find referenced image
+        rapidxml::xml_node<> *reference = resourceNode->first_node("reference");
+        if(reference)
+        {
+            pAtlas->image_ = Resource::StringToResourceId(resourceNode->first_attribute("uuid")->value());
+        }
     }
     return ret;
 }

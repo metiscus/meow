@@ -21,11 +21,14 @@ public:
     const Region GetRegion(const uint32_t& id) const;
     bool ContainsRegion(const uint32_t& id) const;
 
+    ResourceId GetImageId() const;
+
     static const ResourceType TypeId;
 
     static std::shared_ptr<Resource> Load(rapidxml::xml_document<> &doc);
 private:
     std::map<uint32_t, Region> regions_;
+    ResourceId image_;
 };
 
 

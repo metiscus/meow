@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iterator>
 #include <rapidxml.hpp>
+#include "image.h"
 #include "imageatlas.h"
 
 static ResourceManager* instance = nullptr;
@@ -233,6 +234,7 @@ extern "C"
 {
     ResourceLoader nullLoader;
     ResourceLoader imageAtlasLoader;
+    ResourceLoader imageLoader;
 
     void test_resourcemgr()
     {
@@ -256,11 +258,18 @@ extern "C"
                 return ImageAtlas::Load(doc);
             };
 
+            imageLoader.type = Resource::StringToResourceType("89d94ad2-a732-49de-8ef5-ca9579c000d3");
+            imageLoader.load_fun = [](rapidxml::xml_document<> &doc) -> std::shared_ptr<Resource>
+            {
+                BOOST_LOG_TRIVIAL(trace)<<"Image Resource Loader";
+                return Image::Load(doc);
+            };
         }
         catch(...)
         {
         }
         ResourceManager::GetInstance().AddResourceLoader(imageAtlasLoader);
+        ResourceManager::GetInstance().AddResourceLoader(imageLoader);
         ResourceManager::GetInstance().LoadResource(id);
         ResourceManager::DestroyInstance();
     }

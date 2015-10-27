@@ -1,0 +1,4 @@
+<!-- example resource: an image -->
+<resource uuid="948f16fa-78ed-11e5-8bcf-feff819cdc9f" type="89d94ad2-a732-49de-8ef5-ca9579c000d3">
+    <file>smiley.png</file>
+</resource>
