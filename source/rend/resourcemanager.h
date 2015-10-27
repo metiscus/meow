@@ -7,11 +7,7 @@
 #include <map>
 #include <vector>
 #include <rapidxml.hpp>
-
-class Resource;
-
-typedef boost::uuids::uuid ResourceId;
-typedef boost::uuids::uuid ResourceType;
+#include "resource.h"
 
 struct ResourceLoader
 {

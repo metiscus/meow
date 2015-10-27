@@ -4,6 +4,7 @@ CXXFLAGS += $(CFLAGS) -DRAPIDXML_NO_EXCEPTIONS -std=gnu++11 -Irapidxml -DBOOST_A
 LDFLAGS  := -lboost_system -lboost_filesystem -lboost_log
 
 SRC=\
+	source/rend/image.cpp\
 	source/rend/resourcemanager.cpp\
 	source/character.c\
 	source/object.c\
