@@ -168,12 +168,12 @@ bool ResourceManager::LoadResourceFile(ResourceId id, const std::string& filenam
         }
         else
         {
-            //\TODO: add error reporting
+            BOOST_LOG_TRIVIAL(error)<<filename<<" did not contain valid type field for resource";
         }
     }
     else
     {
-        //\TODO: add error reporting
+        BOOST_LOG_TRIVIAL(error)<<filename<<" did not contain valid resource node";
     }
     free(fileCStr);
 
