@@ -7,6 +7,7 @@ SRC=\
 	source/rend/image.cpp\
 	source/rend/imageatlas.cpp\
 	source/rend/resourcemanager.cpp\
+	source/rend/map/tile.cpp\
 	source/character.c\
 	source/object.c\
 
